@@ -250,24 +250,24 @@ class PortalShell extends HTMLElement {
     switch (location.pathname) {
       case '/home':
         sections = [
-          '/content/articles/home/a.md',
-          '/content/articles/home/d.md',
-          '/content/articles/home/b.md',
-          '/content/articles/home/c.md'
+          '/content/articles/home/a.html',
+          '/content/articles/home/d.html',
+          '/content/articles/home/b.html',
+          '/content/articles/home/c.html'
         ];
         break;
 
       case '/dev':
         sections = [
-          '/content/articles/dev/a.md',
-          '/content/articles/dev/b.md',
-          '/content/articles/dev/c.md'
+          '/content/articles/dev/a.html',
+          '/content/articles/dev/b.html',
+          '/content/articles/dev/c.html'
         ];
         break;
 
       case '/about':
         sections = [
-          '/content/articles/home/a.md'
+          '/content/articles/home/a.html'
         ];
         break;
 

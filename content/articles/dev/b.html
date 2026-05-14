@@ -1,0 +1,25 @@
+<style>
+  .section {
+    min-height: 200vh;
+    padding: 4rem;
+    background-color: #e0f7fa;
+    color: #111;
+    font-family: system-ui, sans-serif;
+  }
+  p { font-size: 1.2rem; line-height: 1.6; margin-bottom: 2rem; }
+  img { max-width: 100%; height: auto; display: block; margin: 2rem 0; }
+</style>
+
+<div class="section">
+  <p>
+    Компании Google Research и DeepMind
+    <a target="_blank" href="https://developers.google.com/health-ai-developer-foundations/medgemma">выпустили</a>
+    MedGemma — набор ИИ-моделей с открытым исходным кодом для медицины.
+  </p>
+
+  <img src="/content/articles/medgemma/img/stephen-foster-IcwbJuCK-kQ-unsplash.webp" alt="Stephen Foster/Unsplash" />
+
+  <p>
+    MedGemma предлагает модели с 4 млрд и 27 млрд параметров для анализа текста и изображений в медицине.
+  </p>
+</div>
