@@ -8,7 +8,6 @@ class PortalShell extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
 
-    // Подключаем глобальную таблицу стилей с переменными (если она действительно CSSStyleSheet)
     if (globalThemeSheet) {
       this.shadowRoot.adoptedStyleSheets = [globalThemeSheet];
     }
@@ -188,16 +187,14 @@ class PortalShell extends HTMLElement {
   }
 
   connectedCallback() {
-    // Инициализируем тему
     initTheme();
 
-    // Вешаем обработчики событий
+    // Вешаем обработчики на все ссылки навигации
     const navLinks = this.shadowRoot.querySelectorAll('nav a');
     navLinks.forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
         const path = link.getAttribute('href'); // 'home', 'dev', 'about'
-        // Используем pushState с относительным путём, браузер сам добавит базовый URL
         history.pushState(null, '', path);
         this.render();
       });
@@ -212,23 +209,17 @@ class PortalShell extends HTMLElement {
 
     window.addEventListener('popstate', () => this.render());
 
-    // Первый рендер
     this.render();
   }
 
-  // Вспомогательная функция: извлекает короткий путь из полного location.pathname
   getRelativePath() {
-    // Если в основном документе есть <base href="/sayword/">, можно отрезать его
     const baseEl = document.querySelector('base');
     const base = baseEl ? baseEl.getAttribute('href') : '/';
     let path = location.pathname;
-    // Убираем базовый префикс
     if (path.startsWith(base)) {
       path = path.slice(base.length);
     }
-    // Убираем завершающий слеш и начальный
     path = path.replace(/\/$/, '').replace(/^\//, '');
-    // Если пусто — это home
     return path || 'home';
   }
 
@@ -238,7 +229,7 @@ class PortalShell extends HTMLElement {
 
     const currentPath = this.getRelativePath();
 
-    // Обновляем активный пункт меню
+    // Активный пункт меню
     const links = this.shadowRoot.querySelectorAll('nav a');
     links.forEach(link => {
       const href = link.getAttribute('href');
@@ -249,7 +240,6 @@ class PortalShell extends HTMLElement {
       }
     });
 
-    // Определяем секции
     let sections = [];
     switch (currentPath) {
       case 'home':
