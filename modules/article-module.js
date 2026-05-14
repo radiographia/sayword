@@ -3,10 +3,8 @@ import { ShadowModule } from './shadow-module.js';
 import './article-section.js';
 
 export class ArticleModule extends ShadowModule {
-
   constructor() {
     super();
-    // Используем метод базового класса для стилей
     this.setStyles(`
       :host {
         display: block;
@@ -15,28 +13,42 @@ export class ArticleModule extends ShadowModule {
   }
 
   connectedCallback() {
-    super.connectedCallback(); // Вызываем метод родителя
-    
-    // Отрисовка слота
-    this.shadowRoot.innerHTML = `<slot></slot>`;
+    super.connectedCallback();
 
-    // Запускаем наблюдение после рендера
-    // requestAnimationFrame гарантирует, что дети уже в DOM
-    requestAnimationFrame(() => this.observe());
+    // Безопасно добавляем слот, не затирая shadowRoot
+    if (!this.shadowRoot.querySelector('slot')) {
+      const slot = document.createElement('slot');
+      this.shadowRoot.appendChild(slot);
+    }
+
+    requestAnimationFrame(() => {
+      // Небольшая задержка для полной уверенности, что дочерние элементы в DOM
+      setTimeout(() => this.observe(), 0);
+    });
   }
 
   observe() {
+    const sections = this.querySelectorAll('article-section');
+    console.log('article-module: observed', sections.length, 'sections');
+
+    if (sections.length === 0) return;
+
     const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting && e.target.activate) {
-          e.target.activate();
-          io.unobserve(e.target);
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const section = entry.target;
+          if (typeof section.activate === 'function') {
+            console.log('Activate section', section.getAttribute('src'));
+            section.activate();
+            io.unobserve(section);
+          } else {
+            console.warn('Section has no activate()', section);
+          }
         }
       });
     }, { rootMargin: '200px' });
 
-    // Ищем элементы внутри себя (this)
-    this.querySelectorAll('article-section').forEach(sec => io.observe(sec));
+    sections.forEach(sec => io.observe(sec));
   }
 }
 
