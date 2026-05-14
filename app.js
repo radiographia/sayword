@@ -190,9 +190,9 @@ class PortalShell extends HTMLElement {
 
       <nav>
         <ul>
-          <li><a href="/home">Главная</a></li>
-          <li><a href="/dev">Направления</a></li>
-          <li><a href="/about">О нас</a></li>
+          <li><a href="home">Главная</a></li>
+          <li><a href="dev">Направления</a></li>
+          <li><a href="about">О нас</a></li>
         </ul>
       </nav>
 
@@ -205,7 +205,7 @@ class PortalShell extends HTMLElement {
     this.shadowRoot.querySelector('nav a')
       .addEventListener('click', e => {
         e.preventDefault();
-        history.pushState(null, '', '/home');
+        history.pushState(null, '', 'home');
         this.render();
       });
       
@@ -225,7 +225,7 @@ class PortalShell extends HTMLElement {
     initTheme();
 
     if (location.pathname === '/' || location.pathname === '') {
-      history.replaceState(null, '', '/home');
+      history.replaceState(null, '', 'home');
     }
     this.render();
   }
@@ -248,26 +248,26 @@ class PortalShell extends HTMLElement {
     let sections = []; 
 
     switch (location.pathname) {
-      case '/home':
+      case 'home':
         sections = [
-          '/content/articles/home/a.html',
-          '/content/articles/home/d.html',
-          '/content/articles/home/b.html',
-          '/content/articles/home/c.html'
+          'content/articles/home/a.html',
+          'content/articles/home/d.html',
+          'content/articles/home/b.html',
+          'content/articles/home/c.html'
         ];
         break;
 
-      case '/dev':
+      case 'dev':
         sections = [
-          '/content/articles/dev/a.html',
-          '/content/articles/dev/b.html',
-          '/content/articles/dev/c.html'
+          'content/articles/dev/a.html',
+          'content/articles/dev/b.html',
+          'content/articles/dev/c.html'
         ];
         break;
 
-      case '/about':
+      case 'about':
         sections = [
-          '/content/articles/home/a.html'
+          'content/articles/home/a.html'
         ];
         break;
 

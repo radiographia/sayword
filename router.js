@@ -30,26 +30,26 @@ function renderRoute(path) {
   let sections = [];
 
   switch (path) {
-    case '/home':
+    case 'home':
       sections = [
-        '/content/articles/home/a.html',
-        '/content/articles/home/d.html',
-        '/content/articles/home/b.html',
-        '/content/articles/home/c.html'
+        'content/articles/home/a.html',
+        'content/articles/home/d.html',
+        'content/articles/home/b.html',
+        'content/articles/home/c.html'
       ];
       break;
 
-    case '/dev':
+    case 'dev':
       sections = [
-        '/content/articles/dev/a.html',
-        '/content/articles/dev/b.html',
-        '/content/articles/dev/c.html'
+        'content/articles/dev/a.html',
+        'content/articles/dev/b.html',
+        'content/articles/dev/c.html'
       ];
       break;
 
-    case '/about':
+    case 'about':
       sections = [
-        '/content/articles/home/a.html'
+        'content/articles/home/a.html'
       ];
       break;
 
@@ -76,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Если путь пустой, перенаправляем на /home
   if (currentPath === '/' || currentPath === '') {
-    history.replaceState(null, null, '/home');
-    currentPath = '/home';
+    history.replaceState(null, null, 'home');
+    currentPath = 'home';
   }
   
   renderRoute(currentPath);
