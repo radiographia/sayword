@@ -2,10 +2,8 @@
 import { LazyModule } from './lazy-module.js';
 
 export class ArticleSection extends LazyModule {
-  
   constructor() {
     super();
-    // Стили с CSS-переменными для поддержки темы
     this.setStyles(`
       :host {
         display: block;
@@ -21,8 +19,7 @@ export class ArticleSection extends LazyModule {
   }
 
   connectedCallback() {
-    super.connectedCallback(); // Обязательный вызов super
-    
+    super.connectedCallback();
     if (this._activated) return;
 
     this.shadowRoot.innerHTML = `
@@ -34,15 +31,23 @@ export class ArticleSection extends LazyModule {
     const src = this.getAttribute('src');
     if (!src) return;
 
+    // Строим правильный путь с учётом <base>
+    const baseEl = document.querySelector('base');
+    const base = baseEl ? baseEl.getAttribute('href') : '/';
+    const cleanSrc = src.replace(/^\//, '');
+    const fullUrl = base + cleanSrc;
+
+    console.log('Fetching', fullUrl);
+
     try {
-      const md = await fetch(src).then(r => r.text());
+      const response = await fetch(fullUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
       if (!this.isConnected) return;
 
-      // Заменяем контент
-      this.shadowRoot.innerHTML = `<article>${md}</article>`;
-      
+      this.shadowRoot.innerHTML = `<article>${text}</article>`;
     } catch (e) {
-      this.shadowRoot.innerHTML = `<div style="color: var(--accent-color);">Error loading content</div>`;
+      this.shadowRoot.innerHTML = `<div style="color: var(--accent-color);">Ошибка загрузки: ${e.message}</div>`;
     }
   }
 }
