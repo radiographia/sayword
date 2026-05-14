@@ -1,7 +1,6 @@
-// \www\app.js
+// app.js
 import './modules/article-module.js';
 import './modules/article-section.js';
-// 1. Импортируем контроллер темы и общую таблицу стилей
 import { globalThemeSheet, initTheme, applyTheme } from './modules/theme-controller.js';
 
 class PortalShell extends HTMLElement {
@@ -9,13 +8,13 @@ class PortalShell extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
 
-    // 2. Подключаем глобальную таблицу стилей с переменными
-    // Использование adoptedStyleSheets позволяет обновлять тему во всех компонентах сразу
-    this.shadowRoot.adoptedStyleSheets = [globalThemeSheet];
+    // Подключаем глобальную таблицу стилей с переменными (если она действительно CSSStyleSheet)
+    if (globalThemeSheet) {
+      this.shadowRoot.adoptedStyleSheets = [globalThemeSheet];
+    }
 
     this.shadowRoot.innerHTML = `
       <style>
-        /* Основные стили теперь используют переменные */
         :host {
           display: block;
           min-height: 100vh;
@@ -25,11 +24,10 @@ class PortalShell extends HTMLElement {
           transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* --- Header --- */
         header {
           display: flex;
           align-items: center;
-          justify-content: space-between; /* Раздвигаем логотип и кнопку */
+          justify-content: space-between;
           padding: 20px;
           background-color: var(--header-bg);
           border-bottom: 1px solid var(--border-color);
@@ -57,7 +55,6 @@ class PortalShell extends HTMLElement {
           letter-spacing: 3px;
         }
 
-        /* --- Theme Switcher --- */
         #theme-switcher {
           background: transparent;
           border: 1px solid var(--border-color);
@@ -74,7 +71,6 @@ class PortalShell extends HTMLElement {
           border-color: var(--accent-color);
         }
 
-        /* --- Navigation --- */
         nav {
           background-color: var(--nav-bg);
           border-bottom: 1px solid var(--border-color);
@@ -120,7 +116,6 @@ class PortalShell extends HTMLElement {
           color: #ffffff;
         }
 
-        /* --- Content --- */
         #content {
           display: block;
           width: 100%;
@@ -130,7 +125,6 @@ class PortalShell extends HTMLElement {
           box-sizing: border-box;
         }
 
-        /* --- Footer --- */
         footer {
           padding: 20px;
           background-color: var(--header-bg);
@@ -142,35 +136,28 @@ class PortalShell extends HTMLElement {
           margin-top: 40px;
         }
 
-        /* --- Mobile Adaptation --- */
         @media (max-width: 768px) {
           header {
             flex-direction: column;
             gap: 10px;
           }
-          
           .header-group {
-             justify-content: center;
+            justify-content: center;
           }
-          
           header h1 {
             font-size: 1.2rem;
             letter-spacing: 1px;
           }
-          
           nav ul {
             flex-direction: column;
           }
-
           nav li {
             border-right: none;
             border-bottom: 1px solid var(--border-color);
           }
-          
           nav li:first-child {
             border-left: none;
           }
-
           nav a {
             padding: 12px 20px;
             text-align: center;
@@ -180,11 +167,9 @@ class PortalShell extends HTMLElement {
 
       <header>
         <div class="header-group">
-          <!-- Вставляем ваш логотип -->
           <img src="https://z-cdn-media.chatglm.cn/files/cb86c63f-78b1-4790-be3a-694b94d7fbc8.png?auth_key=1871045873-a9f8e162ae694a4ba44f01f87b872b92-0-1b9d71e8d3cf62c49351400f257c2358" alt="Logo">
           <h1>RADIOGRAPHIA</h1>
         </div>
-        <!-- Кнопка переключения темы -->
         <button id="theme-switcher">Сменить тему</button>
       </header>
 
@@ -200,16 +185,24 @@ class PortalShell extends HTMLElement {
 
       <footer>© 2026 RADIOGRAPHIA.ORG</footer>
     `;
+  }
 
-    // Обработчики событий меню
-    this.shadowRoot.querySelector('nav a')
-      .addEventListener('click', e => {
+  connectedCallback() {
+    // Инициализируем тему
+    initTheme();
+
+    // Вешаем обработчики событий
+    const navLinks = this.shadowRoot.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', e => {
         e.preventDefault();
-        history.pushState(null, '', 'home');
+        const path = link.getAttribute('href'); // 'home', 'dev', 'about'
+        // Используем pushState с относительным путём, браузер сам добавит базовый URL
+        history.pushState(null, '', path);
         this.render();
       });
-      
-    // Обработчик кнопки темы
+    });
+
     this.shadowRoot.querySelector('#theme-switcher')
       .addEventListener('click', () => {
         const current = localStorage.getItem('app-theme');
@@ -218,36 +211,47 @@ class PortalShell extends HTMLElement {
       });
 
     window.addEventListener('popstate', () => this.render());
+
+    // Первый рендер
+    this.render();
   }
 
-  connectedCallback() {
-    // 3. Инициализируем тему при подключении элемента
-    initTheme();
-
-    if (location.pathname === '/' || location.pathname === '') {
-      history.replaceState(null, '', 'home');
+  // Вспомогательная функция: извлекает короткий путь из полного location.pathname
+  getRelativePath() {
+    // Если в основном документе есть <base href="/sayword/">, можно отрезать его
+    const baseEl = document.querySelector('base');
+    const base = baseEl ? baseEl.getAttribute('href') : '/';
+    let path = location.pathname;
+    // Убираем базовый префикс
+    if (path.startsWith(base)) {
+      path = path.slice(base.length);
     }
-    this.render();
+    // Убираем завершающий слеш и начальный
+    path = path.replace(/\/$/, '').replace(/^\//, '');
+    // Если пусто — это home
+    return path || 'home';
   }
 
   render() {
     const content = this.shadowRoot.querySelector('#content');
     content.innerHTML = '';
 
-    // Управление активным состоянием ссылок
+    const currentPath = this.getRelativePath();
+
+    // Обновляем активный пункт меню
     const links = this.shadowRoot.querySelectorAll('nav a');
     links.forEach(link => {
-      if (link.getAttribute('href') === location.pathname) {
+      const href = link.getAttribute('href');
+      if (href === currentPath) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');
       }
     });
 
-    // выбираем раздел по пути
-    let sections = []; 
-
-    switch (location.pathname) {
+    // Определяем секции
+    let sections = [];
+    switch (currentPath) {
       case 'home':
         sections = [
           'content/articles/home/a.html',
@@ -256,7 +260,6 @@ class PortalShell extends HTMLElement {
           'content/articles/home/c.html'
         ];
         break;
-
       case 'dev':
         sections = [
           'content/articles/dev/a.html',
@@ -264,30 +267,24 @@ class PortalShell extends HTMLElement {
           'content/articles/dev/c.html'
         ];
         break;
-
       case 'about':
         sections = [
           'content/articles/home/a.html'
         ];
         break;
-
       default:
         content.innerHTML = '<h2 style="color: var(--accent-color); text-align: center;">404 - Страница не найдена</h2>';
         return;
     }
 
-    // создаем article-module
     const article = document.createElement('article-module');
-
-    // вставляем секции статьи
     sections.forEach(src => {
       const el = document.createElement('article-section');
       el.setAttribute('src', src);
       article.appendChild(el);
     });
-
     content.appendChild(article);
   }
-} 
+}
 
 customElements.define('portal-shell', PortalShell);
