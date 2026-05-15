@@ -2,8 +2,14 @@
   .section {
     min-height: 200vh;   /* два экрана */
     padding: 4rem;
-    background-color: #f5f5f5;
-    color: #111;
+    /* --- ЗАМЕНА НА ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ --- */
+    background-color: var(--bg-color);       /* Был #1e1e2f */
+    color: var(--text-color);                /* Был #f0f0f0 */
+    border-bottom: 1px solid var(--border-color); /* Добавил для красоты разделения */
+    
+    /* Плавная смена цветов при переключении темы */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
     font-family: system-ui, sans-serif;
   }
   h1 { font-size: 2.5rem; margin-bottom: 1rem; }
