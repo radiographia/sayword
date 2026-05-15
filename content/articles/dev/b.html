@@ -2,8 +2,14 @@
   .section {
     min-height: 200vh;
     padding: 4rem;
-    background-color: #e0f7fa;
-    color: #111;
+    /* --- ЗАМЕНА НА ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ --- */
+    background-color: var(--bg-color);  
+    color: var(--text-color);           
+    border-bottom: 1px solid var(--border-color);
+    
+    /* Плавная смена цветов при переключении темы */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
     font-family: system-ui, sans-serif;
   }
   p { font-size: 1.2rem; line-height: 1.6; margin-bottom: 2rem; }
