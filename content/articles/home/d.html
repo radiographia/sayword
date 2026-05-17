@@ -1,22 +1,30 @@
 <style>
   .section {
-    min-height: 200vh; /* два экрана */
+    min-height: 100vh; /* два экрана */
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 2rem;
 
-    padding: 4rem;
+    /*padding: 4rem;*/
     box-sizing: border-box;
 
-    background-color: blue;
-    color: white;
+    /* --- ЗАМЕНА НА ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ --- */
+    background-color: var(--bg-color);    
+    color: var(--text-color);          
+    border-bottom: 1px solid var(--border-color); 
+    
+    /* Плавная смена цветов при переключении темы */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
     font-family: system-ui, sans-serif;
   }
 
-  .section h1 {
-    font-size: 3rem;
+  .section h1, h2, h3 {
+    /*font-size: 3rem;*/
     margin: 0;
+    /* Заголовок делаем акцентным цветом (красный/бордо) */
+    color: var(--accent-color); 
   }
 
   .section p {
@@ -26,27 +34,13 @@
   }
 
   .spacer {
-    height: 200vh;
+    height: 100vh;
+  }
+  img {
+    width: 100%;
   }
 </style>
 
 <div class="section">
-  <h1>Demo Article — Section D</h1>
-
-  <p>
-    This is the first section of a large article.
-    It is intentionally tall and behaves like a landing block.
-  </p>
-
-  <p>
-    The content is loaded lazily when the section enters the viewport.
-    Styles are fully encapsulated inside the markdown file.
-  </p>
-
-  <div class="spacer"></div>
-
-  <p>
-    Scroll continues inside the same section, occupying the second screen.
-    This makes it suitable for storytelling, promos, or visual narratives.
-  </p>
+ <img src="/sayword/assets/img/OHIF.png">
 </div>
