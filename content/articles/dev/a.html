@@ -1,25 +1,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --blue: #3B4AE8;
-    --blue-dark: #2E3BD0;
-    --blue-deep: #0D1630;
-    --blue-mid: #2C3AA0;
-    --bg: #ffffff;
-    --bg2: #F5F6FA;
-    --text: #0D1630;
-    --muted: #5A6480;
-    --border: #E2E5F0;
-    --font: 'Inter', sans-serif;
+    /* --- ЗАМЕНА НА ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ --- */
+    background-color: var(--bg-color);    
+    color: var(--text-color);          
+    border-bottom: 1px solid var(--border-color); 
+    
+    /* Плавная смена цветов при переключении темы */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
+    font-family: system-ui, sans-serif;
   }
-
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
-
- 
 
   /* ── HERO ── */
   .hero {
