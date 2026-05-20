@@ -252,6 +252,7 @@ class PortalShell extends HTMLElement {
         break;
       case 'dev':
         sections = [
+          'content/articles/dev/market.html',
           'content/articles/dev/a.html',
           'content/articles/dev/b.html',
           'content/articles/dev/c.html'
