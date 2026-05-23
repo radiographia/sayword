@@ -1,5 +1,5 @@
-// modules/article-section.js
 import { LazyModule } from './lazy-module.js';
+// Настоятельно рекомендуется: import DOMPurify from 'dompurify';
 
 export class ArticleSection extends LazyModule {
   constructor() {
@@ -10,16 +10,14 @@ export class ArticleSection extends LazyModule {
         min-height: 100vh;
         border-bottom: 1px solid var(--border-color);
       }
-      .placeholder {
+      .placeholder, .error {
         color: var(--text-color);
-        opacity: 0.5;
         padding: 20px;
       }
+      .error { color: var(--accent-color, red); }
     `);
 
-    // ── Фиксируем Баг 1: выделенный контейнер для контента ───────────────
-    // Не трогаем весь shadowRoot — только этот div
-    // Стили из setStyles() остаются нетронутыми
+    // Контейнер для контента, чтобы не затирать базовые стили
     this._container = document.createElement('div');
     this.shadowRoot.appendChild(this._container);
   }
@@ -27,22 +25,28 @@ export class ArticleSection extends LazyModule {
   connectedCallback() {
     super.connectedCallback();
     if (this._activated) return;
+    this._container.innerHTML = `<div class="placeholder">Section placeholder...</div>`;
+  }
 
-    // Пишем в контейнер, а не в shadowRoot напрямую
-    this._container.innerHTML = `
-      <div class="placeholder">Section placeholder...</div>
-    `;
+  // Очистка ресурсов при удалении компонента из DOM (Критично для SPA!)
+  disconnectedCallback() {
+    super.disconnectedCallback?.();
+    // Удаляем все внешние стили, которые были инжектированы этой статьей
+    document.querySelectorAll('link[data-article-style]').forEach(el => el.remove());
   }
 
   async onActivate() {
     const src = this.getAttribute('src');
     if (!src) return;
 
-    const baseEl = document.querySelector('base');
-    const base = baseEl ? baseEl.getAttribute('href') : '/';
-    const cleanSrc = src.replace(/^\//, '');
-    const fullUrl = base + cleanSrc;
-    console.log('Fetching', fullUrl);
+    // 1. Безопасное формирование URL с учетом <base href="...">
+    let fullUrl;
+    try {
+      fullUrl = new URL(src, document.baseURI).href;
+    } catch (e) {
+      this._renderError('Некорректный URL статьи');
+      return;
+    }
 
     try {
       const response = await fetch(fullUrl);
@@ -53,50 +57,66 @@ export class ArticleSection extends LazyModule {
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/html');
 
+      // Helper: Резолвинг относительных путей статьи к абсолютным
+      const resolveUrl = (relativeUrl) => {
+        try { return new URL(relativeUrl, fullUrl).href; } 
+        catch { return relativeUrl; }
+      };
+
+      // Очистка старых динамических стилей внутри Shadow DOM (защита от дублей)
+      this.shadowRoot.querySelectorAll('style[data-article-style]').forEach(el => el.remove());
+
       // ── 1. Внешние шрифты и стили → document.head ──────────────────────
       doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
         const href = link.getAttribute('href');
-        if (href && !document.querySelector(`link[href="${href}"]`)) {
-          document.head.appendChild(link.cloneNode(true));
+        if (!href) return;
+        const absoluteHref = resolveUrl(href);
+        
+        // Проверяем дубликаты по абсолютному пути
+        if (!document.querySelector(`link[href="${absoluteHref}"]`)) {
+          const newLink = link.cloneNode(true);
+          newLink.href = absoluteHref;
+          newLink.setAttribute('data-article-style', 'true'); // Маркер для очистки
+          document.head.appendChild(newLink);
         }
       });
 
-      // ── 2. Инлайн-стили: обрабатываем и добавляем прямо в shadowRoot ───
-      // Фиксируем Баг 2 и Баг 4:
-      // - <style> теперь прямой потомок shadowRoot (не внутри article)
-      // - body → :host, :root → :host чтобы работали базовые стили
+      // ── 2. Инлайн-стили: инкапсуляция в Shadow DOM ─────────────────────
       doc.querySelectorAll('style').forEach(style => {
         const el = document.createElement('style');
+        el.setAttribute('data-article-style', 'true'); // Маркер
+        // Базовая замена body/root на :host
         el.textContent = style.textContent
-          .replace(/\bbody\b\s*\{/g, ':host {')
-          .replace(/:root\s*\{/g,   ':host {');
+          .replace(/(^|[\s,{])body(?=[\s,{])/g, '$1:host')
+          .replace(/(^|[\s,{]):root(?=[\s,{])/g, '$1:host');
         this.shadowRoot.appendChild(el);
-        style.remove(); // убираем из контента — уже обработан
+        style.remove(); 
       });
 
-      // ── 3. Собираем скрипты в порядке документа, удаляем из doc ────────
+      // ── 3. Скрипты ─────────────────────────────────────────────────────
       const scripts = [...doc.querySelectorAll('script')];
       scripts.forEach(s => s.remove());
 
-      // ── 4. Рендерим контент (без скриптов и стилей) ─────────────────────
+      // ── 4. Рендерим контент ────────────────────────────────────────────
+      // ВНИМАНИЕ: Для защиты от XSS используйте DOMPurify.sanitize(doc.body.innerHTML)
       this._container.innerHTML = `<article>${doc.body.innerHTML}</article>`;
 
-      // ── Helpers ──────────────────────────────────────────────────────────
-      const hoistExternalScript = (original) => {
+      // ── Helpers ────────────────────────────────────────────────────────
+      const hoistExternalScript = async (original) => {
         const scriptSrc = original.getAttribute('src');
-        if (document.querySelector(`script[src="${scriptSrc}"]`)) {
-          return Promise.resolve();
-        }
+        if (!scriptSrc) return;
+        const absoluteSrc = resolveUrl(scriptSrc);
+
+        if (document.querySelector(`script[src="${absoluteSrc}"]`)) return;
+
         return new Promise((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = scriptSrc;
+          script.src = absoluteSrc;
           for (const attr of ['type', 'crossorigin', 'integrity', 'referrerpolicy']) {
-            if (original.hasAttribute(attr)) {
-              script.setAttribute(attr, original.getAttribute(attr));
-            }
+            if (original.hasAttribute(attr)) script.setAttribute(attr, original.getAttribute(attr));
           }
           script.onload = resolve;
-          script.onerror = () => reject(new Error(`Не удалось загрузить: ${scriptSrc}`));
+          script.onerror = () => reject(new Error(`Не удалось загрузить: ${absoluteSrc}`));
           document.head.appendChild(script);
         });
       };
@@ -105,15 +125,17 @@ export class ArticleSection extends LazyModule {
         const script = document.createElement('script');
         if (original.hasAttribute('type')) script.type = original.getAttribute('type');
         script.textContent = original.textContent;
+        // Добавление в head вызывает синхронное выполнение
         document.head.appendChild(script);
+        // Мгновенное удаление безопасно, так как инлайн-код уже выполнен
         document.head.removeChild(script);
       };
 
-      // ── 5. Скрипты выполняются строго в порядке документа ───────────────
-      // Фиксируем Баг 3: не разделяем на «инлайн сначала» —
-      // порядок в HTML всегда осмысленен (конфиг пишется до библиотеки)
+      // ── 5. Строгий порядок выполнения скриптов ─────────────────────────
       for (const script of scripts) {
+        if (!this.isConnected) return; // Прерываем, если компонент уничтожили
         if (!script.hasAttribute('src') && !script.textContent.trim()) continue;
+        
         try {
           if (script.hasAttribute('src')) {
             await hoistExternalScript(script);
@@ -125,18 +147,19 @@ export class ArticleSection extends LazyModule {
         }
       }
 
-      // ── 6. MathJax: явный типсет для Shadow DOM ─────────────────────────
-      // Фиксируем Баг 5: MathJax наблюдает только document.body,
-      // Shadow DOM он не видит автоматически
+      // ── 6. MathJax: явный типсет для Shadow DOM ────────────────────────
       if (window.MathJax?.typesetPromise) {
         await window.MathJax.typesetPromise([this._container]);
       }
 
     } catch (e) {
-      this._container.innerHTML = `
-        <div style="color: var(--accent-color);">Ошибка загрузки: ${e.message}</div>
-      `;
+      this._renderError(e.message);
     }
+  }
+
+  _renderError(message) {
+    if (!this.isConnected) return;
+    this._container.innerHTML = `<div class="error">Ошибка загрузки: ${message}</div>`;
   }
 }
 
