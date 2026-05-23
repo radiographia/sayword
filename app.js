@@ -7,6 +7,7 @@ class PortalShell extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._currentPath = null; // для защиты от лишних render()
 
     if (globalThemeSheet) {
       this.shadowRoot.adoptedStyleSheets = [globalThemeSheet];
@@ -22,7 +23,6 @@ class PortalShell extends HTMLElement {
           color: var(--text-color);
           transition: background-color 0.3s ease, color 0.3s ease;
         }
-
         header {
           display: flex;
           align-items: center;
@@ -32,19 +32,16 @@ class PortalShell extends HTMLElement {
           border-bottom: 1px solid var(--border-color);
           gap: 15px;
         }
-        
         .header-group {
           display: flex;
           align-items: center;
           gap: 15px;
         }
-
         header img {
           height: 40px;
           width: auto;
           border-radius: 4px;
         }
-
         header h1 {
           margin: 0;
           font-size: 1.5rem;
@@ -53,7 +50,6 @@ class PortalShell extends HTMLElement {
           text-transform: uppercase;
           letter-spacing: 3px;
         }
-
         #theme-switcher {
           background: transparent;
           border: 1px solid var(--border-color);
@@ -69,7 +65,6 @@ class PortalShell extends HTMLElement {
           color: #fff;
           border-color: var(--accent-color);
         }
-
         nav {
           background-color: var(--nav-bg);
           border-bottom: 1px solid var(--border-color);
@@ -77,7 +72,6 @@ class PortalShell extends HTMLElement {
           top: 0;
           z-index: 1000;
         }
-
         nav ul {
           list-style: none;
           display: flex;
@@ -85,15 +79,12 @@ class PortalShell extends HTMLElement {
           margin: 0;
           padding: 0;
         }
-
         nav li {
           border-right: 1px solid var(--border-color);
         }
-
         nav li:first-child {
           border-left: 1px solid var(--border-color);
         }
-
         nav a {
           display: block;
           text-decoration: none;
@@ -104,17 +95,14 @@ class PortalShell extends HTMLElement {
           transition: background-color 0.2s, color 0.2s;
           text-transform: uppercase;
         }
-
         nav a:hover {
           background-color: var(--bg-color);
           opacity: 0.9;
         }
-
         nav a.active {
           background-color: var(--accent-color);
           color: #ffffff;
         }
-
         #content {
           display: block;
           width: 100%;
@@ -123,7 +111,6 @@ class PortalShell extends HTMLElement {
           padding: 30px 20px;
           box-sizing: border-box;
         }
-
         footer {
           padding: 20px;
           background-color: var(--header-bg);
@@ -134,33 +121,14 @@ class PortalShell extends HTMLElement {
           opacity: 0.7;
           margin-top: 40px;
         }
-
         @media (max-width: 768px) {
-          header {
-            flex-direction: column;
-            gap: 10px;
-          }
-          .header-group {
-            justify-content: center;
-          }
-          header h1 {
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-          }
-          nav ul {
-            flex-direction: column;
-          }
-          nav li {
-            border-right: none;
-            border-bottom: 1px solid var(--border-color);
-          }
-          nav li:first-child {
-            border-left: none;
-          }
-          nav a {
-            padding: 12px 20px;
-            text-align: center;
-          }
+          header { flex-direction: column; gap: 10px; }
+          .header-group { justify-content: center; }
+          header h1 { font-size: 1.2rem; letter-spacing: 1px; }
+          nav ul { flex-direction: column; }
+          nav li { border-right: none; border-bottom: 1px solid var(--border-color); }
+          nav li:first-child { border-left: none; }
+          nav a { padding: 12px 20px; text-align: center; }
         }
       </style>
 
@@ -189,13 +157,20 @@ class PortalShell extends HTMLElement {
   connectedCallback() {
     initTheme();
 
-    // Вешаем обработчики на все ссылки навигации
-    const navLinks = this.shadowRoot.querySelectorAll('nav a');
-    navLinks.forEach(link => {
+    const baseEl = document.querySelector('base');
+    const base = baseEl ? baseEl.getAttribute('href') : '/';
+
+    // ── Навигация ────────────────────────────────────────────────────────
+    this.shadowRoot.querySelectorAll('nav a').forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
-        const path = link.getAttribute('href'); // 'home', 'dev', 'about'
-        history.pushState(null, '', path);
+        const path = link.getAttribute('href');
+
+        // Фиксируем Баг 4: не перерисовываем если уже на этой странице
+        if (path === this._currentPath) return;
+
+        // Фиксируем Баг 2: абсолютный путь с учётом base
+        history.pushState(null, '', base + path);
         this.render();
       });
     });
@@ -203,69 +178,71 @@ class PortalShell extends HTMLElement {
     this.shadowRoot.querySelector('#theme-switcher')
       .addEventListener('click', () => {
         const current = localStorage.getItem('app-theme');
-        const next = current === 'dark' ? 'ivory' : 'dark';
-        applyTheme(next);
+        applyTheme(current === 'dark' ? 'ivory' : 'dark');
       });
 
-    window.addEventListener('popstate', () => this.render());
+    // Фиксируем Баг 1: render() только при смене пути, не хэша
+    // Фиксируем Баг 3: сохраняем ссылку для removeEventListener
+    this._onPopState = () => {
+      if (this.getRelativePath() !== this._currentPath) {
+        this.render();
+      }
+    };
+    window.addEventListener('popstate', this._onPopState);
 
     this.render();
+  }
+
+  disconnectedCallback() {
+    // Фиксируем Баг 3: снимаем listener при удалении из DOM
+    window.removeEventListener('popstate', this._onPopState);
   }
 
   getRelativePath() {
     const baseEl = document.querySelector('base');
     const base = baseEl ? baseEl.getAttribute('href') : '/';
     let path = location.pathname;
-    if (path.startsWith(base)) {
-      path = path.slice(base.length);
-    }
+    if (path.startsWith(base)) path = path.slice(base.length);
     path = path.replace(/\/$/, '').replace(/^\//, '');
     return path || 'home';
   }
 
   render() {
+    const currentPath = this.getRelativePath();
+    this._currentPath = currentPath;
+
     const content = this.shadowRoot.querySelector('#content');
     content.innerHTML = '';
 
-    const currentPath = this.getRelativePath();
-
-    // Активный пункт меню
-    const links = this.shadowRoot.querySelectorAll('nav a');
-    links.forEach(link => {
-      const href = link.getAttribute('href');
-      if (href === currentPath) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
+    // ── Активный пункт меню ──────────────────────────────────────────────
+    this.shadowRoot.querySelectorAll('nav a').forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === currentPath);
     });
 
-    let sections = [];
-    switch (currentPath) {
-      case 'home':
-        sections = [
-          'content/articles/home/a.html',
-          'content/articles/home/d.html',
-          'content/articles/home/b.html',
-          'content/articles/home/c.html'
-        ];
-        break;
-      case 'dev':
-        sections = [
-          'content/articles/dev/market.html',
-          'content/articles/dev/a.html',
-          'content/articles/dev/b.html',
-          'content/articles/dev/c.html'
-        ];
-        break;
-      case 'about':
-        sections = [
-          'content/articles/home/a.html'
-        ];
-        break;
-      default:
-        content.innerHTML = '<h2 style="color: var(--accent-color); text-align: center;">404 - Страница не найдена</h2>';
-        return;
+    // ── Секции для текущего маршрута ─────────────────────────────────────
+    const routes = {
+      home: [
+        'content/articles/home/a.html',
+        'content/articles/home/d.html',
+        'content/articles/home/b.html',
+        'content/articles/home/c.html',
+      ],
+      dev: [
+        'content/articles/dev/market.html',
+        'content/articles/dev/a.html',
+        'content/articles/dev/b.html',
+        'content/articles/dev/c.html',
+      ],
+      about: [
+        'content/articles/home/a.html',
+      ],
+    };
+
+    const sections = routes[currentPath];
+
+    if (!sections) {
+      content.innerHTML = '<h2 style="color: var(--accent-color); text-align: center;">404 - Страница не найдена</h2>';
+      return;
     }
 
     const article = document.createElement('article-module');
