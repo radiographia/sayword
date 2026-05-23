@@ -94,4 +94,6 @@ export class ArticleModule extends ShadowModule {
   }
 }
 
-customElements.define('article-module', ArticleModule);
+if (!customElements.get('article-module')) {
+  customElements.define('article-module', ArticleModule);
+}
