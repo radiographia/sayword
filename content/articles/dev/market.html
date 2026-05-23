@@ -1,6 +1,12 @@
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  MathJax = {
+    tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
   :root {
     --blue: #3B4AE8;
     --blue-light: #F0F2FF;
@@ -24,34 +30,7 @@
     padding: 60px 40px 80px;
   }
 
-  /* ── MATH RENDERING ── */
-  .mi { font-style: italic; }
-  .vec { font-style: italic; font-weight: 700; }
-  .sqrt-w { display: inline-flex; align-items: flex-start; gap: 1px; vertical-align: middle; }
-  .sqrt-s { font-size: 1.3em; line-height: 1.05; }
-  .sqrt-r { border-top: 1.5px solid currentColor; padding: 1px 3px 0; display: inline-block; line-height: 1.5; }
-  .frac {
-    display: inline-flex; flex-direction: column; align-items: center;
-    vertical-align: middle; margin: 0 3px; font-size: 0.9em;
-  }
-  .frac .n { border-bottom: 1.5px solid currentColor; padding: 0 5px 2px; text-align: center; line-height: 1.4; }
-  .frac .d { padding: 2px 5px 0; text-align: center; line-height: 1.4; }
-  .math-line {
-    display: flex; align-items: center; justify-content: center;
-    flex-wrap: wrap; gap: 6px;
-    padding: 8px 0; font-size: 15px; line-height: 2;
-    font-family: Georgia, 'Times New Roman', serif;
-  }
-  .math-col {
-    display: flex; flex-direction: column; gap: 14px; align-items: flex-start;
-    padding: 4px 0;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 15px; line-height: 2;
-  }
-  .math-col .mc-row { display: flex; align-items: center; gap: 6px; }
-  .mc-comment { font-family: var(--font); font-style: normal; font-size: 13px; color: var(--muted); margin-left: 8px; }
-
-  /* ── HEADER ── */
+  /* Header */
   .doc-header {
     border-bottom: 2px solid var(--blue);
     padding-bottom: 32px;
@@ -70,6 +49,8 @@
   .doc-meta { display: flex; gap: 32px; flex-wrap: wrap; }
   .meta-item { font-size: 13px; color: var(--muted); }
   .meta-item strong { color: var(--text); }
+
+  /* Logo badge */
   .logo-badge {
     display: inline-block;
     background: var(--blue); color: white;
@@ -78,7 +59,7 @@
     margin-bottom: 20px;
   }
 
-  /* ── SECTIONS ── */
+  /* Sections */
   h2 {
     font-size: 20px; font-weight: 700; color: var(--text);
     margin: 48px 0 16px;
@@ -89,7 +70,7 @@
   p { margin-bottom: 14px; color: var(--text); }
   p.muted { color: var(--muted); font-size: 14px; }
 
-  /* ── MATH BLOCK ── */
+  /* Math blocks */
   .math-block {
     background: var(--bg2);
     border-left: 3px solid var(--blue);
@@ -102,14 +83,9 @@
     font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--blue);
     margin-bottom: 10px;
-    font-family: var(--font);
-  }
-  .math-block .note {
-    margin-top: 10px; font-size: 13px; color: var(--muted);
-    font-family: var(--font); font-style: normal;
   }
 
-  /* ── TABLES ── */
+  /* Axis table */
   table {
     width: 100%; border-collapse: collapse;
     margin: 20px 0; font-size: 14px;
@@ -120,7 +96,7 @@
   tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
   tbody td:first-child { font-weight: 600; color: var(--blue); white-space: nowrap; }
 
-  /* ── SCORE CARDS ── */
+  /* Score cards */
   .score-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
     margin: 20px 0;
@@ -149,7 +125,7 @@
   .result-card .r-val { font-size: 48px; font-weight: 700; color: white; line-height: 1; }
   .result-card .r-desc { font-size: 14px; color: rgba(255,255,255,0.85); max-width: 340px; line-height: 1.55; }
 
-  /* ── CONDITION BOX ── */
+  /* Condition box */
   .condition-box {
     background: var(--blue-light);
     border: 1px solid #C5C9F0;
@@ -158,7 +134,7 @@
   }
   .condition-box strong { color: var(--blue); }
 
-  /* ── SENSITIVITY TABLE ── */
+  /* Sensitivity table */
   .sens-table td:nth-child(2),
   .sens-table td:nth-child(3),
   .sens-table td:nth-child(4) { text-align: center; }
@@ -166,7 +142,7 @@
   .tag-mid { color: #E67E22; font-weight: 600; }
   .tag-high { color: #27AE60; font-weight: 600; }
 
-  /* ── CONCLUSION ── */
+  /* Conclusion */
   .conclusion {
     background: var(--bg2); border-radius: 12px;
     padding: 28px 32px; margin-top: 48px;
@@ -176,7 +152,7 @@
   .conclusion ul { padding-left: 20px; }
   .conclusion li { margin-bottom: 8px; font-size: 14px; color: var(--text); }
 
-  /* ── FOOTER ── */
+  /* Page footer */
   .doc-footer {
     margin-top: 64px; padding-top: 20px;
     border-top: 1px solid var(--border);
@@ -222,88 +198,60 @@
   </thead>
   <tbody>
     <tr>
-      <td><i>e&#x20D7;</i><sub>x</sub></td>
-      <td><strong>Текущий контекст</strong> <i>C</i></td>
+      <td>$\vec{e}_x$</td>
+      <td><strong>Текущий контекст</strong> $C$</td>
       <td>Насколько внешняя среда благоприятна для внедрения: инфраструктура, регуляторика, позиция руководства, бюджетный цикл</td>
       <td>Клиника уже использует МИС; главный врач поддерживает автоматизацию; есть статья бюджета на IT</td>
     </tr>
     <tr>
-      <td><i>e&#x20D7;</i><sub>y</sub></td>
-      <td><strong>Потребность</strong> <i>N</i></td>
+      <td>$\vec{e}_y$</td>
+      <td><strong>Потребность</strong> $N$</td>
       <td>Острота проблемы, которую решает продукт: насколько велики потери без него</td>
       <td>Радиолог тратит 3+ часа на документацию; отделение перегружено; высокий риск ошибок из-за усталости</td>
     </tr>
     <tr>
-      <td><i>e&#x20D7;</i><sub>z</sub></td>
-      <td><strong>Мотивация</strong> <i>M</i></td>
+      <td>$\vec{e}_z$</td>
+      <td><strong>Мотивация</strong> $M$</td>
       <td>Личная и организационная готовность к изменению: желание освоить новое, доверие к ИИ, карьерная выгода</td>
       <td>Врач молод и открыт к технологиям; руководство ставит KPI по скорости оборота исследований</td>
     </tr>
   </tbody>
 </table>
 
-<p>Каждый фактор нормируется на интервале [0,&nbsp;1], где 0 — полное отсутствие, 1 — максимальная выраженность. Длина вектора вдоль оси равна численному значению фактора.</p>
+<p>Каждый фактор нормируется на интервале $[0, 1]$, где $0$ — полное отсутствие, $1$ — максимальная выраженность. Длина вектора вдоль оси равна численному значению фактора.</p>
 
 
 <!-- 2. Математическое определение -->
 <h2>2. Математическое определение результирующего вектора</h2>
 
-<p>Три компонентных вектора в базисе
-  (<i>e&#x20D7;</i><sub>x</sub>, <i>e&#x20D7;</i><sub>y</sub>, <i>e&#x20D7;</i><sub>z</sub>):
-</p>
+<p>Три компонентных вектора в базисе $(\vec{e}_x, \vec{e}_y, \vec{e}_z)$:</p>
 
 <div class="math-block">
   <div class="label">Определение компонент</div>
-  <div class="math-line">
-    <i>V&#x20D7;</i><sub>C</sub> = <i>C</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>x</sub>,
-    &nbsp;&nbsp;
-    <i>V&#x20D7;</i><sub>N</sub> = <i>N</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>y</sub>,
-    &nbsp;&nbsp;
-    <i>V&#x20D7;</i><sub>M</sub> = <i>M</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>z</sub>
-  </div>
+  $$\vec{V}_C = C\,\vec{e}_x, \qquad \vec{V}_N = N\,\vec{e}_y, \qquad \vec{V}_M = M\,\vec{e}_z$$
 </div>
 
-<p>Результирующий вектор ценности <i>V&#x20D7;</i> есть их сумма:</p>
+<p>Результирующий вектор ценности $\vec{V}$ есть их сумма:</p>
 
 <div class="math-block">
   <div class="label">Результирующий вектор</div>
-  <div class="math-line">
-    <i>V&#x20D7;</i> = <i>V&#x20D7;</i><sub>C</sub> + <i>V&#x20D7;</i><sub>N</sub> + <i>V&#x20D7;</i><sub>M</sub>
-    &nbsp;=&nbsp;
-    <i>C</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>x</sub> + <i>N</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>y</sub> + <i>M</i>&thinsp;·&thinsp;<i>e&#x20D7;</i><sub>z</sub>
-  </div>
+  $$\vec{V} = \vec{V}_C + \vec{V}_N + \vec{V}_M = C\,\vec{e}_x + N\,\vec{e}_y + M\,\vec{e}_z$$
 </div>
 
 <p>Его <strong>модуль</strong> (скалярная величина воспринимаемой ценности):</p>
 
 <div class="math-block">
   <div class="label">Модуль результирующего вектора</div>
-  <div class="math-line">
-    |<i>V&#x20D7;</i>| =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r"><i>C</i>² + <i>N</i>² + <i>M</i>²</span></span>
-  </div>
-  <p class="note">
-    Максимально возможное значение:&nbsp;
-    |<i>V&#x20D7;</i>|<sub>max</sub> =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">3</span></span>
-    ≈ 1,73 &nbsp;при <i>C</i> = <i>N</i> = <i>M</i> = 1
-  </p>
+  $$|\vec{V}| = \sqrt{C^2 + N^2 + M^2}$$
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);">Максимально возможное значение: $|\vec{V}|_{\max} = \sqrt{3} \approx 1{,}73$ при $C = N = M = 1$</p>
 </div>
 
 <p>Направление вектора задаётся <strong>направляющими косинусами</strong>:</p>
 
 <div class="math-block">
   <div class="label">Направляющие косинусы</div>
-  <div class="math-line">
-    cos&thinsp;α = <span class="frac"><span class="n"><i>C</i></span><span class="d">|<i>V&#x20D7;</i>|</span></span>,
-    &nbsp;&nbsp;
-    cos&thinsp;β = <span class="frac"><span class="n"><i>N</i></span><span class="d">|<i>V&#x20D7;</i>|</span></span>,
-    &nbsp;&nbsp;
-    cos&thinsp;γ = <span class="frac"><span class="n"><i>M</i></span><span class="d">|<i>V&#x20D7;</i>|</span></span>
-  </div>
-  <p class="note">
-    Выполняется тождество:&nbsp; cos²α + cos²β + cos²γ = 1
-  </p>
+  $$\cos\alpha = \frac{C}{|\vec{V}|}, \qquad \cos\beta = \frac{N}{|\vec{V}|}, \qquad \cos\gamma = \frac{M}{|\vec{V}|}$$
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);">Выполняется тождество: $\cos^2\alpha + \cos^2\beta + \cos^2\gamma = 1$</p>
 </div>
 
 <p class="muted">Направление вектора показывает, <em>за счёт какого фактора</em> формируется ценность. Два продукта с одинаковым модулем, но разным направлением требуют принципиально разных маркетинговых стратегий.</p>
@@ -312,7 +260,7 @@
 <!-- 3. Оценка для SayWord -->
 <h2>3. Оценка компонент для SayWord Medicine</h2>
 
-<p>Ниже приведены экспертные оценки на основе анализа рынка медицинской радиологии России (2024–2025). Шкала [0,&nbsp;1].</p>
+<p>Ниже приведены экспертные оценки на основе анализа рынка медицинской радиологии России (2024–2025). Шкала $[0, 1]$.</p>
 
 <div class="score-grid">
   <div class="score-card">
@@ -334,7 +282,7 @@
 
 <h3>Обоснование оценок</h3>
 
-<p><strong>Контекст (C = 0,75).</strong> Государственная программа цифровизации здравоохранения создаёт регуляторный попутный ветер. Большинство крупных клиник уже внедрили МИС и привыкли к интеграции внешних IT-решений. Сдерживающий фактор — бюджетные циклы в госсекторе и консерватизм части главных врачей. В коммерческих клиниках контекст ещё более благоприятен.</p>
+<p><strong>Контекст (C = 0,75).</strong> Государственная программа цифровизации здравоохранения создаёт регуляторный попутный ветер. Большинство крупных клиник уже внедрили МИС и привыкли к интеграции внешних IT-решений. Сдерживающий фактор — бюджетные циклы в госсекторе и консерватизм части главных врачей. В коммерческих клиниках контекст ещё более благоприятен.
 
 <p><strong>Потребность (N = 0,90).</strong> Наиболее сильный вектор. Задокументированные потери: 2–4 часа ежедневно на документацию при норме 8-часовой смены, высокий процент ошибок сторонности и пропущенных полей при работе под нагрузкой. Проблема универсальная, не зависит от размера клиники или региона.</p>
 
@@ -344,15 +292,7 @@
 
 <div class="math-block">
   <div class="label">Расчёт</div>
-  <div class="math-line">
-    |<i>V&#x20D7;</i>| =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">(0,75)² + (0,90)² + (0,65)²</span></span>
-    =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">0,5625 + 0,8100 + 0,4225</span></span>
-    =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">1,795</span></span>
-    ≈ <strong>1,34</strong>
-  </div>
+  $$|\vec{V}| = \sqrt{(0{,}75)^2 + (0{,}90)^2 + (0{,}65)^2} = \sqrt{0{,}5625 + 0{,}8100 + 0{,}4225} = \sqrt{1{,}795} \approx 1{,}34$$
 </div>
 
 <div class="result-card">
@@ -360,25 +300,14 @@
     <div class="r-label">Результирующий вектор ценности</div>
     <div class="r-val">|V| = 1,34</div>
   </div>
-  <div class="r-desc">Из максимально возможных 1,73 — продукт находится в зоне <strong>высокой рыночной готовности</strong>. Соотношение к максимуму: 77%. Доминирующий фактор — потребность (ось Y, cos&thinsp;β = 0,67).</div>
+  <div class="r-desc">Из максимально возможных 1,73 — продукт находится в зоне <strong>высокой рыночной готовности</strong>. Соотношение к максимуму: 77%. Доминирующий фактор — потребность (ось Y, cosβ = 0,67).</div>
 </div>
 
 <div class="math-block">
   <div class="label">Направляющие косинусы — доля каждого фактора в результирующей ценности</div>
-  <div class="math-col">
-    <div class="mc-row">
-      cos&thinsp;α = <span class="frac"><span class="n">0,75</span><span class="d">1,34</span></span> ≈ 0,56
-      <span class="mc-comment">(Контекст)</span>
-    </div>
-    <div class="mc-row">
-      cos&thinsp;β = <span class="frac"><span class="n">0,90</span><span class="d">1,34</span></span> ≈ 0,67
-      <span class="mc-comment">(Потребность — доминирует)</span>
-    </div>
-    <div class="mc-row">
-      cos&thinsp;γ = <span class="frac"><span class="n">0,65</span><span class="d">1,34</span></span> ≈ 0,49
-      <span class="mc-comment">(Мотивация — наиболее слабый вектор)</span>
-    </div>
-  </div>
+  $$\cos\alpha = \frac{0{,}75}{1{,}34} \approx 0{,}56 \quad (\text{Контекст})$$
+  $$\cos\beta = \frac{0{,}90}{1{,}34} \approx 0{,}67 \quad (\text{Потребность — доминирует})$$
+  $$\cos\gamma = \frac{0{,}65}{1{,}34} \approx 0{,}49 \quad (\text{Мотивация — наиболее слабый вектор})$$
 </div>
 
 
@@ -458,33 +387,20 @@
 <!-- 5. Условие нулевой ценности -->
 <h2>5. Условие нулевой и максимальной ценности</h2>
 
-<p><strong>Нулевая ценность.</strong> Даже при высоких значениях двух факторов, обнуление любого одного компонента существенно снижает модуль. Полный ноль достигается только при <i>C</i> = <i>N</i> = <i>M</i> = 0, что в реальности невозможно. Однако:</p>
+<p><strong>Нулевая ценность.</strong> Даже при высоких значениях двух факторов, обнуление любого одного компонента существенно снижает модуль. Полный ноль достигается только при $C = N = M = 0$, что в реальности невозможно. Однако:</p>
 
 <div class="math-block">
   <div class="label">Практическое условие неприемлемо низкой ценности</div>
-  <div class="math-line">
-    |<i>V&#x20D7;</i>| &lt; 0,5 &nbsp;⟹&nbsp; продукт не пройдёт порог принятия решения
-  </div>
-  <p class="note">
-    Например: <i>C</i>=0,2,&thinsp; <i>N</i>=0,3,&thinsp; <i>M</i>=0,3
-    &nbsp;⟹&nbsp; |<i>V&#x20D7;</i>| = 0,47 — внедрение не состоится.
-  </p>
+  $$|\vec{V}| < 0{,}5 \implies \text{продукт не пройдёт порог принятия решения}$$
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);">Например: $C=0{,}2,\ N=0{,}3,\ M=0{,}3 \Rightarrow |\vec{V}| = 0{,}47$ — внедрение не состоится.</p>
 </div>
 
 <p><strong>Максимальная ценность</strong> достигается при всех компонентах равных 1:</p>
 
 <div class="math-block">
   <div class="label">Максимум</div>
-  <div class="math-line">
-    |<i>V&#x20D7;</i>|<sub>max</sub> =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">1² + 1² + 1²</span></span>
-    =
-    <span class="sqrt-w"><span class="sqrt-s">√</span><span class="sqrt-r">3</span></span>
-    ≈ 1,73
-  </div>
-  <p class="note">
-    SayWord сейчас на уровне 1,34 / 1,73 = 77% от теоретического максимума — сильная рыночная позиция.
-  </p>
+  $$|\vec{V}|_{\max} = \sqrt{1^2+1^2+1^2} = \sqrt{3} \approx 1{,}73$$
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);">SayWord сейчас на уровне $1{,}34 / 1{,}73 = 77\%$ от теоретического максимума — сильная рыночная позиция.</p>
 </div>
 
 
@@ -542,4 +458,3 @@
   <span>SayWord Medicine · Конфиденциально</span>
   <span>Версия 1.0 · 2025</span>
 </div>
-
