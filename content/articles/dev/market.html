@@ -8,73 +8,58 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
-  :host {
-    --blue: #3B4AE8;
-    --blue-light: #F0F2FF;
-    --blue-dark: #2C3AA0;
-    --text: #0D1630;
-    --muted: #5A6480;
-    --border: #E2E5F0;
-    --bg: #ffffff;
-    --bg2: #F7F8FC;
-    --font: 'Inter', sans-serif;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: var(--font);
+    font-family: 'Inter', sans-serif;
     font-size: 15px;
     line-height: 1.75;
-    color: var(--text);
-    background: var(--bg);
+    color: #0D1630;
+    background: #ffffff;
     max-width: 860px;
     margin: 0 auto;
     padding: 60px 40px 80px;
   }
 
-  /* Header */
   .doc-header {
-    border-bottom: 2px solid var(--blue);
+    border-bottom: 2px solid #3B4AE8;
     padding-bottom: 32px;
     margin-bottom: 48px;
   }
   .doc-label {
     font-size: 11px; font-weight: 600; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--blue);
+    text-transform: uppercase; color: #3B4AE8;
     margin-bottom: 12px;
   }
   .doc-title {
     font-size: 32px; font-weight: 700; letter-spacing: -0.8px;
-    line-height: 1.2; color: var(--text); margin-bottom: 10px;
+    line-height: 1.2; color: #0D1630; margin-bottom: 10px;
   }
-  .doc-subtitle { font-size: 17px; color: var(--muted); margin-bottom: 20px; }
+  .doc-subtitle { font-size: 17px; color: #5A6480; margin-bottom: 20px; }
   .doc-meta { display: flex; gap: 32px; flex-wrap: wrap; }
-  .meta-item { font-size: 13px; color: var(--muted); }
-  .meta-item strong { color: var(--text); }
+  .meta-item { font-size: 13px; color: #5A6480; }
+  .meta-item strong { color: #0D1630; }
 
-  /* Logo badge */
   .logo-badge {
     display: inline-block;
-    background: var(--blue); color: white;
+    background: #3B4AE8; color: white;
     font-size: 11px; font-weight: 700; line-height: 1.3;
     padding: 6px 10px; border-radius: 7px;
     margin-bottom: 20px;
   }
 
-  /* Sections */
   h2 {
-    font-size: 20px; font-weight: 700; color: var(--text);
+    font-size: 20px; font-weight: 700; color: #0D1630;
     margin: 48px 0 16px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #E2E5F0;
   }
-  h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
-  p { margin-bottom: 14px; color: var(--text); }
-  p.muted { color: var(--muted); font-size: 14px; }
+  h3 { font-size: 16px; font-weight: 600; color: #0D1630; margin: 28px 0 10px; }
+  p { margin-bottom: 14px; color: #0D1630; }
+  p.muted { color: #5A6480; font-size: 14px; }
 
-  /* Math blocks */
   .math-block {
-    background: var(--bg2);
-    border-left: 3px solid var(--blue);
+    background: #F7F8FC;
+    border-left: 3px solid #3B4AE8;
     border-radius: 0 8px 8px 0;
     padding: 20px 24px;
     margin: 20px 0;
@@ -82,42 +67,40 @@
   }
   .math-block .label {
     font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--blue);
+    text-transform: uppercase; color: #3B4AE8;
     margin-bottom: 10px;
   }
 
-  /* Axis table */
   table {
     width: 100%; border-collapse: collapse;
     margin: 20px 0; font-size: 14px;
   }
-  thead tr { background: var(--blue); color: white; }
+  thead tr { background: #3B4AE8; color: white; }
   thead th { padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; }
-  tbody tr:nth-child(even) { background: var(--bg2); }
-  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  tbody td:first-child { font-weight: 600; color: var(--blue); white-space: nowrap; }
+  tbody tr:nth-child(even) { background: #F7F8FC; }
+  tbody td { padding: 12px 16px; border-bottom: 1px solid #E2E5F0; vertical-align: top; }
+  tbody td:first-child { font-weight: 600; color: #3B4AE8; white-space: nowrap; }
 
-  /* Score cards */
   .score-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
     margin: 20px 0;
   }
   .score-card {
-    border: 1px solid var(--border); border-radius: 10px;
+    border: 1px solid #E2E5F0; border-radius: 10px;
     padding: 20px; text-align: center;
   }
   .score-card .axis-name {
     font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+    text-transform: uppercase; color: #5A6480; margin-bottom: 8px;
   }
   .score-card .axis-val {
-    font-size: 40px; font-weight: 700; color: var(--blue);
+    font-size: 40px; font-weight: 700; color: #3B4AE8;
     line-height: 1; margin-bottom: 6px;
   }
-  .score-card .axis-label { font-size: 13px; color: var(--text); font-weight: 500; }
+  .score-card .axis-label { font-size: 13px; color: #0D1630; font-weight: 500; }
 
   .result-card {
-    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+    background: linear-gradient(135deg, #3B4AE8 0%, #2C3AA0 100%);
     border-radius: 12px; padding: 28px 32px;
     display: flex; align-items: center; justify-content: space-between;
     gap: 24px; margin: 24px 0; flex-wrap: wrap;
@@ -126,16 +109,14 @@
   .result-card .r-val { font-size: 48px; font-weight: 700; color: white; line-height: 1; }
   .result-card .r-desc { font-size: 14px; color: rgba(255,255,255,0.85); max-width: 340px; line-height: 1.55; }
 
-  /* Condition box */
   .condition-box {
-    background: var(--blue-light);
+    background: #F0F2FF;
     border: 1px solid #C5C9F0;
     border-radius: 8px; padding: 16px 20px;
     margin: 16px 0; font-size: 14px;
   }
-  .condition-box strong { color: var(--blue); }
+  .condition-box strong { color: #3B4AE8; }
 
-  /* Sensitivity table */
   .sens-table td:nth-child(2),
   .sens-table td:nth-child(3),
   .sens-table td:nth-child(4) { text-align: center; }
@@ -143,22 +124,20 @@
   .tag-mid { color: #E67E22; font-weight: 600; }
   .tag-high { color: #27AE60; font-weight: 600; }
 
-  /* Conclusion */
   .conclusion {
-    background: var(--bg2); border-radius: 12px;
+    background: #F7F8FC; border-radius: 12px;
     padding: 28px 32px; margin-top: 48px;
-    border: 1px solid var(--border);
+    border: 1px solid #E2E5F0;
   }
   .conclusion h3 { margin-top: 0; font-size: 17px; }
   .conclusion ul { padding-left: 20px; }
-  .conclusion li { margin-bottom: 8px; font-size: 14px; color: var(--text); }
+  .conclusion li { margin-bottom: 8px; font-size: 14px; color: #0D1630; }
 
-  /* Page footer */
   .doc-footer {
     margin-top: 64px; padding-top: 20px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid #E2E5F0;
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 12px; color: var(--muted);
+    font-size: 12px; color: #5A6480;
   }
 
   @media (max-width: 600px) {
