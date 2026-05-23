@@ -103,29 +103,44 @@ export class ArticleModule extends ShadowModule {
     this._handleHash(sections);
   }
 
-  async _handleHash(sections) {
-    const hash = window.location.hash.slice(1); // "2" из "#2"
-    if (!hash) return;
+// Было: #2  →  Стало: #dev/2
+// Парсим секцию из второй части: "dev/2".split('/')[1] = "2"
+async _handleHash(sections) {
+  const hash  = location.hash.slice(1);       // "dev/2" или "dev"
+  const parts = hash.split('/');
+  const num   = parts[1] ?? parts[0];         // берём секцию где есть
+  const targetIndex = parseInt(num, 10) - 1;
 
-    const targetIndex = parseInt(hash, 10) - 1;
-    if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= sections.length) return;
+  if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= sections.length) return;
 
-    const target = sections[targetIndex];
+  const target = sections[targetIndex];
 
-    // Активируем все секции до целевой включительно —
-    // незагруженные секции имеют только min-height: 100vh,
-    // после загрузки высота меняется и скролл попадёт мимо
-    await Promise.all(
-      sections.slice(0, targetIndex + 1).map(sec =>
-        typeof sec.activate === 'function'
-          ? sec.activate()
-          : Promise.resolve()
-      )
-    );
+  await Promise.all(
+    sections.slice(0, targetIndex + 1).map(sec =>
+      typeof sec.activate === 'function' ? sec.activate() : Promise.resolve()
+    )
+  );
 
-    // Высоты стабильны — скроллим точно
-    target.scrollIntoView({ behavior: 'instant', block: 'start' });
-  }
+  target.scrollIntoView({ behavior: 'instant', block: 'start' });
+}
+
+// Клик по <a href="#2"> → обновляем hash как "#dev/2"
+this._onLinkClick = (e) => {
+  const link = e.composedPath().find(
+    el => el instanceof HTMLAnchorElement
+       && el.getAttribute('href')?.startsWith('#')
+  );
+  if (!link) return;
+  e.preventDefault();
+
+  const sectionNum = link.getAttribute('href').slice(1); // "2"
+  const currentPage = location.hash.slice(1).split('/')[0]; // "dev"
+
+  // Обновляем hash: "#dev/2" — стреляет hashchange
+  location.hash = currentPage + '/' + sectionNum;
+};
+
+  
 }
 
 if (!customElements.get('article-module')) {
