@@ -5,7 +5,7 @@ import './article-section.js';
 export class ArticleModule extends ShadowModule {
   constructor() {
     super();
-    this._io          = null;
+    this._io           = null;
     this._onHashChange = null;
     this._onLinkClick  = null;
 
@@ -31,30 +31,25 @@ export class ArticleModule extends ShadowModule {
     });
 
     // ── Перехват кликов по якорным ссылкам ──────────────────────────────
-    // Проблема: <base href="/sayword/"> резолвит href="#2" как /sayword/#2
-    // вместо /sayword/home#2 — путь меняется, хэш теряется.
-    // Решение: перехватываем клик, обновляем URL вручную через pushState.
+    // <base href="/sayword/"> резолвит href="#2" как /sayword/#2 —
+    // перехватываем и обновляем хэш вручную в формате #page/section
     this._onLinkClick = (e) => {
-      // composedPath() проникает сквозь shadow DOM boundary —
-      // находим реальный <a> даже если клик был внутри article-section
       const link = e.composedPath().find(
         el => el instanceof HTMLAnchorElement
            && el.getAttribute('href')?.startsWith('#')
       );
       if (!link) return;
-
       e.preventDefault();
-      const hash = link.getAttribute('href'); // "#2"
 
-      // Сохраняем текущий путь, меняем только хэш
-      history.pushState(null, '', location.pathname + hash);
+      const sectionNum  = link.getAttribute('href').slice(1);       // "2"
+      const currentPage = location.hash.slice(1).split('/')[0];     // "dev"
 
-      // pushState не стреляет hashchange — вызываем вручную
-      this._handleHash([...this.querySelectorAll('article-section')]);
+      // Стреляет hashchange → _onHashChange → _handleHash
+      location.hash = currentPage + '/' + sectionNum;               // "#dev/2"
     };
     this.addEventListener('click', this._onLinkClick);
 
-    // Навигация кнопками браузера (назад/вперёд по хэшам)
+    // ── Навигация кнопками браузера (назад/вперёд) ───────────────────────
     this._onHashChange = () => {
       this._handleHash([...this.querySelectorAll('article-section')]);
     };
@@ -103,44 +98,26 @@ export class ArticleModule extends ShadowModule {
     this._handleHash(sections);
   }
 
-// Было: #2  →  Стало: #dev/2
-// Парсим секцию из второй части: "dev/2".split('/')[1] = "2"
-async _handleHash(sections) {
-  const hash  = location.hash.slice(1);       // "dev/2" или "dev"
-  const parts = hash.split('/');
-  const num   = parts[1] ?? parts[0];         // берём секцию где есть
-  const targetIndex = parseInt(num, 10) - 1;
+  // Формат хэша: "#dev/2" → страница dev, секция 2
+  async _handleHash(sections) {
+    const hash  = location.hash.slice(1);    // "dev/2" или "dev" или ""
+    const parts = hash.split('/');
+    const num   = parts[1] ?? parts[0];      // секция — вторая часть если есть
+    const targetIndex = parseInt(num, 10) - 1;
 
-  if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= sections.length) return;
+    if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= sections.length) return;
 
-  const target = sections[targetIndex];
+    const target = sections[targetIndex];
 
-  await Promise.all(
-    sections.slice(0, targetIndex + 1).map(sec =>
-      typeof sec.activate === 'function' ? sec.activate() : Promise.resolve()
-    )
-  );
+    // Активируем все секции до целевой — иначе высоты нестабильны
+    await Promise.all(
+      sections.slice(0, targetIndex + 1).map(sec =>
+        typeof sec.activate === 'function' ? sec.activate() : Promise.resolve()
+      )
+    );
 
-  target.scrollIntoView({ behavior: 'instant', block: 'start' });
-}
-
-// Клик по <a href="#2"> → обновляем hash как "#dev/2"
-this._onLinkClick = (e) => {
-  const link = e.composedPath().find(
-    el => el instanceof HTMLAnchorElement
-       && el.getAttribute('href')?.startsWith('#')
-  );
-  if (!link) return;
-  e.preventDefault();
-
-  const sectionNum = link.getAttribute('href').slice(1); // "2"
-  const currentPage = location.hash.slice(1).split('/')[0]; // "dev"
-
-  // Обновляем hash: "#dev/2" — стреляет hashchange
-  location.hash = currentPage + '/' + sectionNum;
-};
-
-  
+    target.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
 }
 
 if (!customElements.get('article-module')) {
