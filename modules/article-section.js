@@ -33,32 +33,6 @@ export class ArticleModule extends ShadowModule {
 
     if (sections.length === 0) return;
 
-    // ── Точечное внедрение якорей в Light DOM ───────────────────────────
-    sections.forEach((sec, index) => {
-      const anchorId = String(index + 1);
-      
-      // Защита от дублей, если observe() вызовётся повторно
-      if (sec.previousElementSibling?.id === anchorId) return;
-
-      const anchor = document.createElement('a');
-      anchor.id = anchorId;
-      
-      // Скрываем визуально, но оставляем в потоке для нативного скролла браузера
-      Object.assign(anchor.style, {
-        display: 'block',
-        position: 'relative',
-        top: 'var(--header-offset, -60px)', // Компенсация высоты sticky-хедера
-        height: '0',
-        visibility: 'hidden',
-        pointerEvents: 'none'
-      });
-      anchor.setAttribute('aria-hidden', 'true');
-
-      // Вставляем в Light DOM прямо перед секцией (слот подхватит автоматически)
-      sec.parentNode.insertBefore(anchor, sec);
-    });
-    // ─────────────────────────────────────────────────────────────────────
-
     const io = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -78,7 +52,4 @@ export class ArticleModule extends ShadowModule {
   }
 }
 
-// ── Защита от ошибки "already been used with this registry" ─────────────
-if (!customElements.get('article-module')) {
-  customElements.define('article-module', ArticleModule);
-}
+customElements.define('article-module', ArticleModule);
