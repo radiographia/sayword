@@ -7,7 +7,9 @@ class PortalShell extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._currentPath = null; // для защиты от лишних render()
+    this._currentPath   = null;
+    this._onHashChange  = null;
+    this._onPopState    = null;
 
     if (globalThemeSheet) {
       this.shadowRoot.adoptedStyleSheets = [globalThemeSheet];
@@ -132,7 +134,7 @@ class PortalShell extends HTMLElement {
         }
       </style>
 
-      <header>
+     <header>
         <div class="header-group">
           <img src="https://z-cdn-media.chatglm.cn/files/cb86c63f-78b1-4790-be3a-694b94d7fbc8.png?auth_key=1871045873-a9f8e162ae694a4ba44f01f87b872b92-0-1b9d71e8d3cf62c49351400f257c2358" alt="Logo">
           <h1>RADIOGRAPHIA</h1>
@@ -142,9 +144,9 @@ class PortalShell extends HTMLElement {
 
       <nav>
         <ul>
-          <li><a href="home">Главная</a></li>
-          <li><a href="dev">Направления</a></li>
-          <li><a href="about">О нас</a></li>
+          <li><a href="#home">Главная</a></li>
+          <li><a href="#dev">Направления</a></li>
+          <li><a href="#about">О нас</a></li>
         </ul>
       </nav>
 
@@ -157,21 +159,13 @@ class PortalShell extends HTMLElement {
   connectedCallback() {
     initTheme();
 
-    const baseEl = document.querySelector('base');
-    const base = baseEl ? baseEl.getAttribute('href') : '/';
-
-    // ── Навигация ────────────────────────────────────────────────────────
+    // ── Навигация: устанавливаем hash, не меняем pathname ────────────────
     this.shadowRoot.querySelectorAll('nav a').forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
-        const path = link.getAttribute('href');
-
-        // Фиксируем Баг 4: не перерисовываем если уже на этой странице
-        if (path === this._currentPath) return;
-
-        // Фиксируем Баг 2: абсолютный путь с учётом base
-        history.pushState(null, '', base + path);
-        this.render();
+        const page = link.getAttribute('href').slice(1); // "dev" из "#dev"
+        if (page === this._currentPath) return;
+        location.hash = page; // → стреляет hashchange
       });
     });
 
@@ -181,12 +175,18 @@ class PortalShell extends HTMLElement {
         applyTheme(current === 'dark' ? 'ivory' : 'dark');
       });
 
-    // Фиксируем Баг 1: render() только при смене пути, не хэша
-    // Фиксируем Баг 3: сохраняем ссылку для removeEventListener
+    // ── Слушаем hashchange: смена страницы или секции ────────────────────
+    this._onHashChange = () => {
+      const newPage = this._getPage();
+      if (newPage !== this._currentPath) this.render();
+      // смену секции (#dev/2) обрабатывает article-module сам
+    };
+    window.addEventListener('hashchange', this._onHashChange);
+
+    // ── popstate: кнопки браузера назад/вперёд ───────────────────────────
     this._onPopState = () => {
-      if (this.getRelativePath() !== this._currentPath) {
-        this.render();
-      }
+      const newPage = this._getPage();
+      if (newPage !== this._currentPath) this.render();
     };
     window.addEventListener('popstate', this._onPopState);
 
@@ -194,21 +194,18 @@ class PortalShell extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Фиксируем Баг 3: снимаем listener при удалении из DOM
+    window.removeEventListener('hashchange', this._onHashChange);
     window.removeEventListener('popstate', this._onPopState);
   }
 
-  getRelativePath() {
-    const baseEl = document.querySelector('base');
-    const base = baseEl ? baseEl.getAttribute('href') : '/';
-    let path = location.pathname;
-    if (path.startsWith(base)) path = path.slice(base.length);
-    path = path.replace(/\/$/, '').replace(/^\//, '');
-    return path || 'home';
+  // Читаем страницу из hash: "#dev/2" → "dev", "#home" → "home"
+  _getPage() {
+    const hash = location.hash.slice(1); // "dev/2" или "dev" или ""
+    return hash.split('/')[0] || 'home';
   }
 
   render() {
-    const currentPath = this.getRelativePath();
+    const currentPath = this._getPage();
     this._currentPath = currentPath;
 
     const content = this.shadowRoot.querySelector('#content');
@@ -216,10 +213,11 @@ class PortalShell extends HTMLElement {
 
     // ── Активный пункт меню ──────────────────────────────────────────────
     this.shadowRoot.querySelectorAll('nav a').forEach(link => {
-      link.classList.toggle('active', link.getAttribute('href') === currentPath);
+      const page = link.getAttribute('href').slice(1);
+      link.classList.toggle('active', page === currentPath);
     });
 
-    // ── Секции для текущего маршрута ─────────────────────────────────────
+    // ── Маршруты ─────────────────────────────────────────────────────────
     const routes = {
       home: [
         'content/articles/home/a.html',
@@ -239,9 +237,8 @@ class PortalShell extends HTMLElement {
     };
 
     const sections = routes[currentPath];
-
     if (!sections) {
-      content.innerHTML = '<h2 style="color: var(--accent-color); text-align: center;">404 - Страница не найдена</h2>';
+      content.innerHTML = '<h2 style="color:var(--accent-color);text-align:center">404 — Страница не найдена</h2>';
       return;
     }
 
@@ -254,5 +251,7 @@ class PortalShell extends HTMLElement {
     content.appendChild(article);
   }
 }
+
+customElements.define('portal-shell', PortalShell);
 
 customElements.define('portal-shell', PortalShell);
