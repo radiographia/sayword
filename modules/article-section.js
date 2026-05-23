@@ -1,88 +1,143 @@
-// modules/article-module.js
-import { ShadowModule } from './shadow-module.js';
-import './article-section.js';
+// modules/article-section.js
+import { LazyModule } from './lazy-module.js';
 
-export class ArticleModule extends ShadowModule {
+export class ArticleSection extends LazyModule {
   constructor() {
     super();
-    this._io = null; // храним ссылку для последующего disconnect
-
     this.setStyles(`
       :host {
         display: block;
+        min-height: 100vh;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .placeholder {
+        color: var(--text-color);
+        opacity: 0.5;
+        padding: 20px;
       }
     `);
+
+    // ── Фиксируем Баг 1: выделенный контейнер для контента ───────────────
+    // Не трогаем весь shadowRoot — только этот div
+    // Стили из setStyles() остаются нетронутыми
+    this._container = document.createElement('div');
+    this.shadowRoot.appendChild(this._container);
   }
 
   connectedCallback() {
     super.connectedCallback();
+    if (this._activated) return;
 
-    if (!this.shadowRoot.querySelector('slot')) {
-      const slot = document.createElement('slot');
-      this.shadowRoot.appendChild(slot);
-    }
-
-    // Одной задержки достаточно
-    setTimeout(() => this.observe(), 0);
+    // Пишем в контейнер, а не в shadowRoot напрямую
+    this._container.innerHTML = `
+      <div class="placeholder">Section placeholder...</div>
+    `;
   }
 
-  disconnectedCallback() {
-    // Фиксируем Баг 5: чистим observer при удалении из DOM
-    this._io?.disconnect();
-    this._io = null;
-  }
+  async onActivate() {
+    const src = this.getAttribute('src');
+    if (!src) return;
 
-  observe() {
-    // Фиксируем Баг 4: не работаем на отсоединённом элементе
-    if (!this.isConnected) return;
+    const baseEl = document.querySelector('base');
+    const base = baseEl ? baseEl.getAttribute('href') : '/';
+    const cleanSrc = src.replace(/^\//, '');
+    const fullUrl = base + cleanSrc;
+    console.log('Fetching', fullUrl);
 
-    const sections = this.querySelectorAll('article-section');
-    console.log('article-module: observed', sections.length, 'sections');
-    if (sections.length === 0) return;
+    try {
+      const response = await fetch(fullUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      if (!this.isConnected) return;
 
-    // ── Якоря в Light DOM ───────────────────────────────────────────────
-    sections.forEach((sec, index) => {
-      // Фиксируем Баг 3: проверяем по data-атрибуту, а не по id
-      if (sec.previousElementSibling?.dataset.sectionAnchor) return;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
 
-      const anchor = document.createElement('a');
-      anchor.id = String(index + 1);
-      anchor.dataset.sectionAnchor = 'true'; // маркер для проверки дублей
-      anchor.setAttribute('aria-hidden', 'true');
-
-      Object.assign(anchor.style, {
-        display:       'block',
-        position:      'relative',
-        top:           'var(--header-offset, -60px)',
-        height:        '0',
-        visibility:    'hidden',
-        pointerEvents: 'none',
-      });
-
-      sec.parentNode.insertBefore(anchor, sec);
-    });
-
-    // ── IntersectionObserver ────────────────────────────────────────────
-    // Фиксируем Баг 1 и Баг 2: отключаем старый, сохраняем новый
-    this._io?.disconnect();
-    this._io = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const section = entry.target;
-        if (typeof section.activate === 'function') {
-          console.log('Activate section', section.getAttribute('src'));
-          section.activate();
-          this._io.unobserve(section);
-        } else {
-          console.warn('Section has no activate()', section);
+      // ── 1. Внешние шрифты и стили → document.head ──────────────────────
+      doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && !document.querySelector(`link[href="${href}"]`)) {
+          document.head.appendChild(link.cloneNode(true));
         }
       });
-    }, { rootMargin: '200px' });
 
-    sections.forEach(sec => this._io.observe(sec));
+      // ── 2. Инлайн-стили: обрабатываем и добавляем прямо в shadowRoot ───
+      // Фиксируем Баг 2 и Баг 4:
+      // - <style> теперь прямой потомок shadowRoot (не внутри article)
+      // - body → :host, :root → :host чтобы работали базовые стили
+      doc.querySelectorAll('style').forEach(style => {
+        const el = document.createElement('style');
+        el.textContent = style.textContent
+          .replace(/\bbody\b\s*\{/g, ':host {')
+          .replace(/:root\s*\{/g,   ':host {');
+        this.shadowRoot.appendChild(el);
+        style.remove(); // убираем из контента — уже обработан
+      });
+
+      // ── 3. Собираем скрипты в порядке документа, удаляем из doc ────────
+      const scripts = [...doc.querySelectorAll('script')];
+      scripts.forEach(s => s.remove());
+
+      // ── 4. Рендерим контент (без скриптов и стилей) ─────────────────────
+      this._container.innerHTML = `<article>${doc.body.innerHTML}</article>`;
+
+      // ── Helpers ──────────────────────────────────────────────────────────
+      const hoistExternalScript = (original) => {
+        const scriptSrc = original.getAttribute('src');
+        if (document.querySelector(`script[src="${scriptSrc}"]`)) {
+          return Promise.resolve();
+        }
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = scriptSrc;
+          for (const attr of ['type', 'crossorigin', 'integrity', 'referrerpolicy']) {
+            if (original.hasAttribute(attr)) {
+              script.setAttribute(attr, original.getAttribute(attr));
+            }
+          }
+          script.onload = resolve;
+          script.onerror = () => reject(new Error(`Не удалось загрузить: ${scriptSrc}`));
+          document.head.appendChild(script);
+        });
+      };
+
+      const executeInlineScript = (original) => {
+        const script = document.createElement('script');
+        if (original.hasAttribute('type')) script.type = original.getAttribute('type');
+        script.textContent = original.textContent;
+        document.head.appendChild(script);
+        document.head.removeChild(script);
+      };
+
+      // ── 5. Скрипты выполняются строго в порядке документа ───────────────
+      // Фиксируем Баг 3: не разделяем на «инлайн сначала» —
+      // порядок в HTML всегда осмысленен (конфиг пишется до библиотеки)
+      for (const script of scripts) {
+        if (!script.hasAttribute('src') && !script.textContent.trim()) continue;
+        try {
+          if (script.hasAttribute('src')) {
+            await hoistExternalScript(script);
+          } else {
+            executeInlineScript(script);
+          }
+        } catch (e) {
+          console.warn('[ArticleSection] Ошибка скрипта:', e.message);
+        }
+      }
+
+      // ── 6. MathJax: явный типсет для Shadow DOM ─────────────────────────
+      // Фиксируем Баг 5: MathJax наблюдает только document.body,
+      // Shadow DOM он не видит автоматически
+      if (window.MathJax?.typesetPromise) {
+        await window.MathJax.typesetPromise([this._container]);
+      }
+
+    } catch (e) {
+      this._container.innerHTML = `
+        <div style="color: var(--accent-color);">Ошибка загрузки: ${e.message}</div>
+      `;
+    }
   }
 }
 
-if (!customElements.get('article-module')) {
-  customElements.define('article-module', ArticleModule);
-}
+customElements.define('article-section', ArticleSection);
