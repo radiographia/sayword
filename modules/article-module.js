@@ -5,7 +5,8 @@ import './article-section.js';
 export class ArticleModule extends ShadowModule {
   constructor() {
     super();
-    this._io = null; // храним ссылку для последующего disconnect
+    this._io         = null;
+    this._onHashChange = null;
 
     this.setStyles(`
       :host {
@@ -18,52 +19,46 @@ export class ArticleModule extends ShadowModule {
     super.connectedCallback();
 
     if (!this.shadowRoot.querySelector('slot')) {
-      const slot = document.createElement('slot');
-      this.shadowRoot.appendChild(slot);
+      this.shadowRoot.appendChild(document.createElement('slot'));
     }
 
-    // Одной задержки достаточно
-    setTimeout(() => this.observe(), 0);
+    customElements.whenDefined('article-section').then(() => {
+      this.querySelectorAll('article-section').forEach(el => {
+        customElements.upgrade(el);
+      });
+      this.observe();
+    });
+
+    this._onHashChange = () => {
+      const sections = [...this.querySelectorAll('article-section')];
+      this._handleHash(sections);
+    };
+    window.addEventListener('hashchange', this._onHashChange);
   }
 
   disconnectedCallback() {
-    // Фиксируем Баг 5: чистим observer при удалении из DOM
     this._io?.disconnect();
     this._io = null;
+    window.removeEventListener('hashchange', this._onHashChange);
+    this._onHashChange = null;
   }
 
   observe() {
-    // Фиксируем Баг 4: не работаем на отсоединённом элементе
     if (!this.isConnected) return;
 
-    const sections = this.querySelectorAll('article-section');
+    const sections = [...this.querySelectorAll('article-section')];
     console.log('article-module: observed', sections.length, 'sections');
     if (sections.length === 0) return;
 
-    // ── Якоря в Light DOM ───────────────────────────────────────────────
-    sections.forEach((sec, index) => {
-      // Фиксируем Баг 3: проверяем по data-атрибуту, а не по id
-      if (sec.previousElementSibling?.dataset.sectionAnchor) return;
-
-      const anchor = document.createElement('a');
-      anchor.id = String(index + 1);
-      anchor.dataset.sectionAnchor = 'true'; // маркер для проверки дублей
-      anchor.setAttribute('aria-hidden', 'true');
-
-      Object.assign(anchor.style, {
-        display:       'block',
-        position:      'relative',
-        top:           'var(--header-offset, -60px)',
-        height:        '0',
-        visibility:    'hidden',
-        pointerEvents: 'none',
-      });
-
-      sec.parentNode.insertBefore(anchor, sec);
+    // ── id и scroll-margin прямо на элемент секции ───────────────────────
+    // Не нужны отдельные якорные элементы — браузер найдёт секцию по id
+    sections.forEach((sec, i) => {
+      sec.id = String(i + 1);
+      // Компенсация высоты sticky-хедера при нативном скролле браузера
+      sec.style.scrollMarginTop = 'var(--header-offset, 60px)';
     });
 
-    // ── IntersectionObserver ────────────────────────────────────────────
-    // Фиксируем Баг 1 и Баг 2: отключаем старый, сохраняем новый
+    // ── IntersectionObserver: ленивая активация секций ───────────────────
     this._io?.disconnect();
     this._io = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -80,6 +75,34 @@ export class ArticleModule extends ShadowModule {
     }, { rootMargin: '200px' });
 
     sections.forEach(sec => this._io.observe(sec));
+
+    // ── Обработка хэша при первой загрузке ──────────────────────────────
+    this._handleHash(sections);
+  }
+
+  async _handleHash(sections) {
+    const hash = window.location.hash.slice(1); // "3" из "#3"
+    if (!hash) return;
+
+    const targetIndex = parseInt(hash, 10) - 1;
+    if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= sections.length) return;
+
+    const target = sections[targetIndex];
+
+    // Активируем все секции от первой до целевой включительно —
+    // пока они не загружены, их высота нестабильна и скролл попадёт мимо
+    const toActivate = sections.slice(0, targetIndex + 1);
+
+    await Promise.all(
+      toActivate.map(sec =>
+        typeof sec.activate === 'function'
+          ? sec.activate()
+          : Promise.resolve()
+      )
+    );
+
+    // Высоты секций теперь стабильны — скроллим точно
+    target.scrollIntoView({ behavior: 'instant', block: 'start' });
   }
 }
 
