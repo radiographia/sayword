@@ -253,5 +253,3 @@ class PortalShell extends HTMLElement {
 }
 
 customElements.define('portal-shell', PortalShell);
-
-customElements.define('portal-shell', PortalShell);
